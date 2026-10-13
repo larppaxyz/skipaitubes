@@ -1,5 +1,10 @@
 # Skip AI Tunes
 
+**Author:** Lari Temmes
+
+Open-source software licensed under the [GNU General Public License v3.0](LICENSE)
+(GPL-3.0-only). Copyright © 2026 Lari Temmes.
+
 A Manifest V3 Chrome extension that advances to the next video in an actively
 playing YouTube video when the current video displays YouTube’s **AI**
 badge beneath the title or a disclosure explicitly identifies AI-generated music.
