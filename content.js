@@ -1,6 +1,7 @@
 (() => {
   const { isMusicDisclosure, isAIBadge, playbackContext } = globalThis.SkipAITunes;
   let enabled = false;
+  let blockAllAI = false;
   let navigationAt = Date.now();
   let pending = false;
   let lastSkip = null;
@@ -32,7 +33,7 @@
 
   function check() {
     pending = false;
-    if (!enabled || Date.now() - navigationAt < 1500) return;
+    if (!enabled || blockAllAI || Date.now() - navigationAt < 1500) return;
     const context = playbackContext(location.href);
     if (!context) return;
     const watch = document.querySelector('ytd-watch-flexy');
@@ -60,11 +61,16 @@
     pending = true;
     setTimeout(check, 250);
   }
-  chrome.storage.local.get({ enabled: true }).then(settings => {
+  chrome.storage.local.get({ enabled: true, blockAllAI: false }).then(settings => {
     enabled = settings.enabled;
+    blockAllAI = settings.blockAllAI === true;
     schedule();
   });
   chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.blockAllAI) {
+      blockAllAI = changes.blockAllAI.newValue === true;
+      schedule();
+    }
     if (area === 'local' && changes.enabled) {
       enabled = changes.enabled.newValue !== false;
       schedule();

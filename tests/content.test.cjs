@@ -26,7 +26,7 @@ async function fixture(options = {}) {
     setInterval: fn => { interval = fn; },
     MutationObserver: class { observe() {} },
     chrome: { storage: {
-      local: { get: async () => ({ enabled: options.enabled !== false }) },
+      local: { get: async () => ({ enabled: options.enabled !== false, blockAllAI: !!options.blockAllAI }) },
       onChanged: { addListener: fn => { storageListener = fn; } }
     } },
     document: {
@@ -74,7 +74,7 @@ test('advances once for an explicit disclosure during playlist playback', async 
 test('leaves generic labels, paused playback, stale pages, and unrelated next links alone', async () => {
   for (const options of [
     { text: 'Altered or synthetic content' }, { paused: true }, { stale: true },
-    { enabled: false }, { noDisclosure: true }, { disabled: true }, { ad: true },
+    { enabled: false }, { blockAllAI: true }, { noDisclosure: true }, { disabled: true }, { ad: true },
     { url: 'https://www.youtube.com/watch?v=current' },
     { next: 'https://www.youtube.com/watch?v=next&list=other' },
     { next: 'https://www.youtube.com/watch?v=current&list=mix' }

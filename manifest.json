@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Skip AI Tunes",
-  "version": "1.0.0",
-  "description": "Skip videos with YouTube’s AI badge or explicit AI-music disclosures in playlists and mixes.",
+  "version": "1.1.0",
+  "description": "Skip AI-tagged playlist videos or block AI-tagged videos across YouTube, including Home and search.",
   "permissions": ["storage"],
   "action": { "default_popup": "popup.html" },
   "content_scripts": [{
     "matches": ["https://www.youtube.com/*"],
-    "js": ["rules.js", "content.js"],
+    "js": ["rules.js", "content.js", "block.js"],
+    "css": ["content.css"],
     "run_at": "document_idle"
   }]
 }

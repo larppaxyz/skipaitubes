@@ -15,6 +15,17 @@ Use the extension popup to turn skipping on or off. No build or dependency
 installation is required. Settings remain on your device; the extension sends
 no data and requires only storage permission and access to www.youtube.com.
 
+Version 1.1 adds **Block all AI-tagged videos**, a separate setting that is off
+by default. When enabled, videos with an AI badge are hidden from Home, search,
+and recommendations. Tagged watch pages are paused and replaced with a blocking
+notice, including videos outside playlists. Blocking takes priority over playlist
+skipping. Turn blocking off to restore hidden items and player controls; resume
+playback manually. The setting persists and updates open tabs.
+
+Filtering can only detect AI badges YouTube exposes in a card's markup. If Home
+or search omits a video's badge, it cannot be identified before opening the video.
+The extension does not fetch every result's watch page or classify its audio.
+
 ## Detection limits
 
 The **AI** badge triggers skipping even when the disclosure does not specify
