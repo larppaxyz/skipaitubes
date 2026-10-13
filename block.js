@@ -36,6 +36,11 @@
       if (shouldHide) {
         if (!hidden.has(card)) card.setAttribute('data-skip-ai-hidden', '');
         hidden.add(card);
+        // Count video identities rather than DOM nodes: YouTube renders the same
+        // result more than once and recycles cards during infinite scrolling.
+        const id = Array.from(card.querySelectorAll('a[href]'))
+          .map(link => globalThis.SkipAITunes.videoIdFromURL(link.href)).find(Boolean);
+        if (id) globalThis.SkipAITunes.reportBlocked(id);
       } else if (hidden.delete(card)) {
         card.removeAttribute('data-skip-ai-hidden');
       }
@@ -58,6 +63,7 @@
     }
     const video = player.querySelector('video');
     if (video && !video.paused) video.pause();
+    globalThis.SkipAITunes.reportBlocked(id);
     if (blockedPlayer !== player) {
       restorePlayer();
       blockedPlayer = player;

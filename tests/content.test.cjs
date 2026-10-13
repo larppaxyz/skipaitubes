@@ -6,6 +6,7 @@ const rules = require('../rules.js');
 
 async function fixture(options = {}) {
   let clicks = 0;
+  const reports = [];
   let interval;
   let storageListener;
   const timers = [];
@@ -18,7 +19,7 @@ async function fixture(options = {}) {
   };
   const video = { paused: !!options.paused, ended: false, readyState: 4 };
   const sandbox = {
-    SkipAITunes: rules,
+    SkipAITunes: { ...rules, reportBlocked: id => reports.push(id) },
     location: { href: options.url ?? 'https://www.youtube.com/watch?v=current&list=mix' },
     Date: { now: () => now },
     console: { info() {} },
@@ -57,6 +58,7 @@ async function fixture(options = {}) {
   function flush() { while (timers.length) timers.shift()(); }
   flush();
   return {
+    reports,
     clicks: () => clicks,
     tick() { interval(); flush(); },
     disable() { storageListener({ enabled: { newValue: false } }, 'local'); flush(); },
@@ -67,6 +69,7 @@ async function fixture(options = {}) {
 test('advances once for an explicit disclosure during playlist playback', async () => {
   const page = await fixture();
   assert.equal(page.clicks(), 1);
+  assert.deepEqual(page.reports, ['current']);
   page.tick();
   assert.equal(page.clicks(), 1);
 });

@@ -18,7 +18,16 @@
   function isAIBadge(text) {
     return String(text || '').trim().toUpperCase() === 'AI';
   }
-  const rules = { isMusicDisclosure, isAIBadge, playbackContext };
+  function videoIdFromURL(value) {
+    try {
+      const url = new URL(value, 'https://www.youtube.com');
+      if (url.origin !== 'https://www.youtube.com') return null;
+      if (url.pathname === '/watch') return url.searchParams.get('v');
+      if (url.pathname.startsWith('/shorts/')) return url.pathname.split('/')[2] || null;
+    } catch { /* Ignore malformed links. */ }
+    return null;
+  }
+  const rules = { isMusicDisclosure, isAIBadge, playbackContext, videoIdFromURL };
   root.SkipAITunes = rules;
   if (typeof module !== 'undefined') module.exports = rules;
 })(globalThis);

@@ -1,6 +1,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { isMusicDisclosure, isAIBadge, playbackContext } = require('../rules.js');
+const { isMusicDisclosure, isAIBadge, playbackContext, videoIdFromURL } = require('../rules.js');
+
+test('extracts video IDs from result links without counting channel links', () => {
+  assert.equal(videoIdFromURL('/watch?v=abc&list=mix'), 'abc');
+  assert.equal(videoIdFromURL('/shorts/abc'), 'abc');
+  assert.equal(videoIdFromURL('/@creator'), null);
+  assert.equal(videoIdFromURL('https://example.com/watch?v=abc'), null);
+});
 
 test('matches only the standalone AI badge label', () => {
   for (const label of ['AI', ' AI\n', 'ai']) assert.equal(isAIBadge(label), true);

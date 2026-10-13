@@ -26,6 +26,14 @@ Filtering can only detect AI badges YouTube exposes in a card's markup. If Home
 or search omits a video's badge, it cannot be identified before opening the video.
 The extension does not fetch every result's watch page or classify its audio.
 
+Version 1.2 adds a counter on the toolbar icon. Pin the extension in Chrome's
+Extensions menu to keep it visible. It counts unique videos hidden, blocked,
+or skipped across all YouTube tabs during the current browser session. Repeated
+checks, duplicate cards, reloads, and toggling settings do not count the same video
+again. Cards without a usable video link are hidden but cannot be counted.
+The count survives background-worker suspension and resets when Chrome restarts
+or the extension is reloaded, disabled, or updated. It is not saved to disk.
+
 ## Detection limits
 
 The **AI** badge triggers skipping even when the disclosure does not specify

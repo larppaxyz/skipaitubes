@@ -54,6 +54,7 @@
     lastSkip = key;
     console.info('[Skip AI Tunes] Skipping video with an AI badge or music disclosure.');
     next.click();
+    globalThis.SkipAITunes.reportBlocked(context.videoId);
   }
 
   function schedule() {

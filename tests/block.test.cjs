@@ -6,11 +6,11 @@ const fs = require('node:fs');
 function badge(text = 'AI') {
   return { textContent: text, hidden: false, closest: () => null, getAttribute: () => null };
 }
-function card(labels = []) {
+function card(labels = [], id = 'card-video') {
   const attributes = new Set();
   return {
     labels, isConnected: true,
-    querySelectorAll() { return this.labels; },
+    querySelectorAll(selector) { return selector === 'a[href]' ? [{ href: `https://www.youtube.com/watch?v=${id}` }] : this.labels; },
     setAttribute: name => attributes.add(name),
     removeAttribute: name => attributes.delete(name),
     has: name => attributes.has(name)
@@ -18,6 +18,7 @@ function card(labels = []) {
 }
 async function fixture({ cards = [], enabled = false, watchAI = false, path = '/' } = {}) {
   const timers = [];
+  const reports = [];
   let storage;
   let tick;
   const video = { paused: false, pause() { this.paused = true; } };
@@ -27,7 +28,7 @@ async function fixture({ cards = [], enabled = false, watchAI = false, path = '/
   const metadata = card(watchAI ? [badge()] : []);
   const watch = { getAttribute: () => 'current', querySelector: () => metadata };
   const sandbox = {
-    SkipAITunes: require('../rules.js'), URL,
+    SkipAITunes: { ...require('../rules.js'), reportBlocked: id => reports.push(id) }, URL,
     location: { href: `https://www.youtube.com${path}`, pathname: path.split('?')[0] },
     setTimeout: fn => timers.push(fn), setInterval: fn => { tick = fn; },
     MutationObserver: class { observe() {} },
@@ -46,7 +47,7 @@ async function fixture({ cards = [], enabled = false, watchAI = false, path = '/
   await Promise.resolve();
   const flush = () => { while (timers.length) timers.shift()(); };
   flush();
-  return { player, video, metadata,
+  return { player, video, metadata, reports,
     tick() { tick(); flush(); },
     setting(value) { storage({ blockAllAI: { newValue: value } }, 'local'); flush(); }
   };
@@ -59,6 +60,7 @@ test('Home and search hide tagged cards only, and restore them when disabled', a
     const page = await fixture({ cards: [tagged, ordinary], enabled: true, path });
     assert.equal(tagged.has('data-skip-ai-hidden'), true);
     assert.equal(ordinary.has('data-skip-ai-hidden'), false);
+    assert.deepEqual(page.reports, ['card-video']);
     page.setting(false);
     assert.equal(tagged.has('data-skip-ai-hidden'), false);
   }
@@ -79,6 +81,7 @@ test('blocking is off by default and handles newly tagged and recycled cards', a
 test('blocks standalone watch playback and restores controls on disable', async () => {
   const page = await fixture({ enabled: true, watchAI: true, path: '/watch?v=current' });
   assert.equal(page.video.paused, true);
+  assert.deepEqual(page.reports, ['current']);
   assert.equal(page.player.has('data-skip-ai-blocked'), true);
   page.setting(false);
   assert.equal(page.player.has('data-skip-ai-blocked'), false);
@@ -86,5 +89,6 @@ test('blocks standalone watch playback and restores controls on disable', async 
 test('leaves untagged playback alone', async () => {
   const page = await fixture({ enabled: true, path: '/watch?v=current' });
   assert.equal(page.video.paused, false);
+  assert.deepEqual(page.reports, []);
   assert.equal(page.player.has('data-skip-ai-blocked'), false);
 });
