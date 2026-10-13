@@ -43,6 +43,8 @@ async function fixture(options = {}) {
         if (selector.includes('yt-video-attribute-view-model')) {
           return options.badge === undefined ? [] : [{
             textContent: options.badge,
+            getAttribute: () => null,
+            querySelectorAll: () => [],
             closest: () => options.badgeInDescription ? {} : null,
             getClientRects: () => options.hiddenBadge ? [] : [{}]
           }];

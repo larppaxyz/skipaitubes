@@ -1,7 +1,8 @@
 (() => {
   const badgeSelector = [
     'yt-video-attribute-view-model', 'yt-attribute-view-model',
-    'ytd-badge-supported-renderer', '.yt-badge-shape',
+    'ytd-badge-supported-renderer', 'yt-badge-view-model', '.yt-badge-shape',
+    'badge-shape', '.ytBadgeShapeHost',
     'yt-content-metadata-view-model .yt-content-metadata-view-model__metadata-text'
   ].join(',');
   const cardSelector = [
@@ -18,7 +19,7 @@
     return Array.from(root.querySelectorAll(badgeSelector)).some(badge =>
       !badge.closest('#description, #description-inline-expander, #owner, ytd-comments') &&
       !badge.hidden && badge.getAttribute('aria-hidden') !== 'true' &&
-      globalThis.SkipAITunes.isAIBadge(badge.textContent));
+      globalThis.SkipAITunes.badgeHasAILabel(badge));
   }
 
   function restorePlayer() {

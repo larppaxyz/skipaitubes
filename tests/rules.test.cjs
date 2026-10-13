@@ -1,6 +1,31 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { isMusicDisclosure, isAIBadge, playbackContext, videoIdFromURL } = require('../rules.js');
+const { badgeHasAILabel } = require('../rules.js');
+
+test('finds a nested AI label even when its badge wrapper includes help text', () => {
+  const label = { textContent: 'AI', getAttribute: () => null, closest: () => null };
+  const wrapper = { textContent: 'AI Altered or synthetic content', getAttribute: () => null,
+    querySelectorAll: () => [label] };
+  assert.equal(badgeHasAILabel(wrapper), true);
+  label.closest = () => ({});
+  assert.equal(badgeHasAILabel(wrapper), false, 'tooltip-only label must not qualify');
+});
+test('recognizes accessible AI labels and leaves unrelated badges alone', () => {
+  const element = { textContent: '', getAttribute: () => 'AI', querySelectorAll: () => [] };
+  assert.equal(badgeHasAILabel(element), true);
+  element.getAttribute = () => 'Official Artist Channel';
+  assert.equal(badgeHasAILabel(element), false);
+});
+test('recognizes the reported Finnish badge even when its visible text is Al', () => {
+  const element = { textContent: 'Al', getAttribute: () => 'AI: Sisältö on luotu tekoälyllä',
+    querySelectorAll: () => [] };
+  assert.equal(badgeHasAILabel(element), true);
+  element.getAttribute = () => 'AI: Content is generated using artificial intelligence';
+  assert.equal(badgeHasAILabel(element), true);
+  element.getAttribute = () => 'Official Artist Channel';
+  assert.equal(badgeHasAILabel(element), false);
+});
 
 test('extracts video IDs from result links without counting channel links', () => {
   assert.equal(videoIdFromURL('/watch?v=abc&list=mix'), 'abc');

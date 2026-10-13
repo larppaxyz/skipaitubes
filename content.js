@@ -1,5 +1,5 @@
 (() => {
-  const { isMusicDisclosure, isAIBadge, playbackContext } = globalThis.SkipAITunes;
+  const { isMusicDisclosure, badgeHasAILabel, playbackContext } = globalThis.SkipAITunes;
   let enabled = false;
   let blockAllAI = false;
   let navigationAt = Date.now();
@@ -19,6 +19,9 @@
     'ytd-watch-metadata yt-video-attribute-view-model',
     'ytd-watch-metadata yt-attribute-view-model',
     'ytd-watch-metadata ytd-badge-supported-renderer',
+    'ytd-watch-metadata yt-badge-view-model',
+    'ytd-watch-metadata badge-shape',
+    'ytd-watch-metadata .ytBadgeShapeHost',
     'ytd-watch-metadata .yt-badge-shape',
     'ytd-watch-metadata yt-content-metadata-view-model .yt-content-metadata-view-model__metadata-text'
   ].join(',');
@@ -27,7 +30,7 @@
     return Array.from(document.querySelectorAll(badgeSelector)).some(element => {
       if (element.closest('#description, #description-inline-expander, #owner, ytd-comments')) return false;
       // Hidden templates and inactive badges must not trigger a skip.
-      return element.getClientRects().length > 0 && isAIBadge(element.textContent);
+      return element.getClientRects().length > 0 && badgeHasAILabel(element);
     });
   }
 

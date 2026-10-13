@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 
 function badge(text = 'AI') {
-  return { textContent: text, hidden: false, closest: () => null, getAttribute: () => null };
+  return { textContent: text, hidden: false, closest: () => null, getAttribute: () => null, querySelectorAll: () => [] };
 }
 function card(labels = [], id = 'card-video') {
   const attributes = new Set();
@@ -16,7 +16,7 @@ function card(labels = [], id = 'card-video') {
     has: name => attributes.has(name)
   };
 }
-async function fixture({ cards = [], enabled = false, watchAI = false, path = '/' } = {}) {
+async function fixture({ cards = [], enabled = false, watchAI = false, watchLabel = null, path = '/' } = {}) {
   const timers = [];
   const reports = [];
   let storage;
@@ -26,6 +26,7 @@ async function fixture({ cards = [], enabled = false, watchAI = false, path = '/
   player.querySelector = () => video;
   player.parentElement = { insertBefore() {} };
   const metadata = card(watchAI ? [badge()] : []);
+  if (watchLabel) metadata.labels = [{ ...badge('Al'), getAttribute: () => watchLabel }];
   const watch = { getAttribute: () => 'current', querySelector: () => metadata };
   const sandbox = {
     SkipAITunes: { ...require('../rules.js'), reportBlocked: id => reports.push(id) }, URL,
@@ -91,4 +92,11 @@ test('leaves untagged playback alone', async () => {
   assert.equal(page.video.paused, false);
   assert.deepEqual(page.reports, []);
   assert.equal(page.player.has('data-skip-ai-blocked'), false);
+});
+test('direct-open Finnish AI badge blocks playback and reports the video', async () => {
+  const page = await fixture({ enabled: true, watchLabel: 'AI: Sisältö on luotu tekoälyllä',
+    path: '/watch?v=current' });
+  assert.equal(page.video.paused, true);
+  assert.equal(page.player.has('data-skip-ai-blocked'), true);
+  assert.deepEqual(page.reports, ['current']);
 });

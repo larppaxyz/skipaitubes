@@ -18,6 +18,15 @@
   function isAIBadge(text) {
     return String(text || '').trim().toUpperCase() === 'AI';
   }
+  function badgeHasAILabel(element) {
+    const accessibleAI = label => isAIBadge(label) || /^AI\s*:\s*\S/i.test(String(label || '').trim());
+    if (isAIBadge(element.textContent) || accessibleAI(element.getAttribute('aria-label'))) return true;
+    // Badge wrappers can include tooltip/help text in addition to the visible
+    // label. Match the label itself without scanning arbitrary video text.
+    return Array.from(element.querySelectorAll('span, yt-attributed-string, .yt-badge-shape__text, .ytBadgeShapeText, [aria-label]'))
+      .some(label => !label.closest('tp-yt-paper-tooltip, [role="tooltip"], [hidden], [aria-hidden="true"]') &&
+        (isAIBadge(label.textContent) || accessibleAI(label.getAttribute('aria-label'))));
+  }
   function videoIdFromURL(value) {
     try {
       const url = new URL(value, 'https://www.youtube.com');
@@ -27,7 +36,7 @@
     } catch { /* Ignore malformed links. */ }
     return null;
   }
-  const rules = { isMusicDisclosure, isAIBadge, playbackContext, videoIdFromURL };
+  const rules = { isMusicDisclosure, isAIBadge, badgeHasAILabel, playbackContext, videoIdFromURL };
   root.SkipAITunes = rules;
   if (typeof module !== 'undefined') module.exports = rules;
 })(globalThis);
