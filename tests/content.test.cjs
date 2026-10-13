@@ -20,7 +20,7 @@ async function fixture(options = {}) {
   const video = { paused: !!options.paused, ended: false, readyState: 4 };
   const sandbox = {
     SkipAITunes: { ...rules, reportBlocked: id => reports.push(id) },
-    location: { href: options.url ?? 'https://www.youtube.com/watch?v=current&list=mix' },
+    location: { href: options.url ?? 'https://www.youtube.com/watch?v=current&list=mix', pathname: '/watch' }, URL,
     Date: { now: () => now },
     console: { info() {} },
     setTimeout: fn => timers.push(fn),
@@ -40,10 +40,12 @@ async function fixture(options = {}) {
         return next;
       },
       querySelectorAll: selector => {
+        if (selector === 'ytd-playlist-panel-video-renderer' || selector.startsWith('#related')) return [];
+
         if (selector.includes('yt-video-attribute-view-model')) {
           return options.badge === undefined ? [] : [{
             textContent: options.badge,
-            getAttribute: () => null,
+            getAttribute: () => options.badgeLabel || null,
             querySelectorAll: () => [],
             closest: () => options.badgeInDescription ? {} : null,
             getClientRects: () => options.hiddenBadge ? [] : [{}]
@@ -54,7 +56,9 @@ async function fixture(options = {}) {
     }
   };
   let now = 0;
-  vm.runInNewContext(fs.readFileSync(require.resolve('../content.js'), 'utf8'), sandbox);
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(require.resolve('../navigation.js'), 'utf8'), sandbox);
+  vm.runInContext(fs.readFileSync(require.resolve('../content.js'), 'utf8'), sandbox);
   await Promise.resolve();
   now = 2000;
   function flush() { while (timers.length) timers.shift()(); }
@@ -79,8 +83,7 @@ test('advances once for an explicit disclosure during playlist playback', async 
 test('leaves generic labels, paused playback, stale pages, and unrelated next links alone', async () => {
   for (const options of [
     { text: 'Altered or synthetic content' }, { paused: true }, { stale: true },
-    { enabled: false }, { blockAllAI: true }, { noDisclosure: true }, { disabled: true }, { ad: true },
-    { url: 'https://www.youtube.com/watch?v=current' },
+    { enabled: false }, { noDisclosure: true }, { disabled: true }, { ad: true },
     { next: 'https://www.youtube.com/watch?v=next&list=other' },
     { next: 'https://www.youtube.com/watch?v=current&list=mix' }
   ]) {
@@ -113,9 +116,35 @@ test('hidden badges, description text, and unrelated badges do not trigger skips
     { badge: 'AI', hiddenBadge: true }, { badge: 'AI', badgeInDescription: true },
     { badge: 'AI music discussion' }, { badge: 'Official Artist Channel' },
     { badge: 'AI', paused: true }, { badge: 'AI', enabled: false },
-    { badge: 'AI', url: 'https://www.youtube.com/watch?v=current' }
+    { badge: 'AI', ad: true }
   ]) {
     const page = await fixture({ noDisclosure: true, ...options });
     assert.equal(page.clicks(), 0, JSON.stringify(options));
   }
+});
+
+test('block-all mode advances in a playlist even when skipping toggle is off', async () => {
+  const page = await fixture({ enabled: false, blockAllAI: true, badge: 'AI' });
+  assert.equal(page.clicks(), 1);
+  assert.equal(page.video.paused, false);
+  page.tick();
+  assert.equal(page.clicks(), 1);
+});
+test('standalone AI video advances to YouTube next suggestion', async () => {
+  const page = await fixture({ url: 'https://www.youtube.com/watch?v=current',
+    next: 'https://www.youtube.com/watch?v=suggested', badge: 'AI' });
+  assert.equal(page.clicks(), 1);
+  assert.deepEqual(page.reports, ['current']);
+});
+test('playlist player next link works when YouTube omits list parameter', async () => {
+  const page = await fixture({ next: 'https://www.youtube.com/watch?v=next', badge: 'AI' });
+  assert.equal(page.clicks(), 1);
+});
+test('direct-open Finnish badge advances with block-all enabled', async () => {
+  const page = await fixture({ enabled: false, blockAllAI: true,
+    url: 'https://www.youtube.com/watch?v=current', next: 'https://www.youtube.com/watch?v=suggested',
+    noDisclosure: true, badge: 'Al', badgeLabel: 'AI: Sisältö on luotu tekoälyllä' });
+  assert.equal(page.clicks(), 1);
+  assert.equal(page.video.paused, false);
+  assert.deepEqual(page.reports, ['current']);
 });

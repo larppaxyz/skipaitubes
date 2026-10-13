@@ -12,21 +12,12 @@
   const hidden = new Set();
   let enabled = false;
   let pending = false;
-  let blockedPlayer = null;
-  let notice = null;
 
   function tagged(root) {
     return Array.from(root.querySelectorAll(badgeSelector)).some(badge =>
       !badge.closest('#description, #description-inline-expander, #owner, ytd-comments') &&
       !badge.hidden && badge.getAttribute('aria-hidden') !== 'true' &&
       globalThis.SkipAITunes.badgeHasAILabel(badge));
-  }
-
-  function restorePlayer() {
-    if (blockedPlayer) blockedPlayer.removeAttribute('data-skip-ai-blocked');
-    blockedPlayer = null;
-    if (notice) notice.remove();
-    notice = null;
   }
 
   function update() {
@@ -52,29 +43,6 @@
         hidden.delete(card);
       }
     }
-    const watch = document.querySelector('ytd-watch-flexy');
-    const id = new URL(location.href).searchParams.get('v');
-    const player = document.querySelector('#movie_player');
-    const metadata = watch && watch.querySelector('ytd-watch-metadata');
-    const shouldBlock = enabled && location.pathname === '/watch' && id &&
-      watch && watch.getAttribute('video-id') === id && metadata && tagged(metadata) && player;
-    if (!shouldBlock) {
-      restorePlayer();
-      return;
-    }
-    const video = player.querySelector('video');
-    if (video && !video.paused) video.pause();
-    globalThis.SkipAITunes.reportBlocked(id);
-    if (blockedPlayer !== player) {
-      restorePlayer();
-      blockedPlayer = player;
-      player.setAttribute('data-skip-ai-blocked', '');
-      notice = document.createElement('div');
-      notice.className = 'skip-ai-block-notice';
-      notice.setAttribute('role', 'status');
-      notice.textContent = 'AI-tagged video blocked. Turn off “Block all AI-tagged videos” in Skip AI Tunes to watch it.';
-      player.parentElement.insertBefore(notice, player);
-    }
   }
   function schedule() {
     if (pending) return;
@@ -91,7 +59,6 @@
       schedule();
     }
   });
-  document.addEventListener('yt-navigate-start', restorePlayer);
   document.addEventListener('yt-navigate-finish', schedule);
   document.addEventListener('playing', schedule, true);
   new MutationObserver(schedule).observe(document.documentElement, {

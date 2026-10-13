@@ -1,5 +1,5 @@
 (() => {
-  const { isMusicDisclosure, badgeHasAILabel, playbackContext } = globalThis.SkipAITunes;
+  const { isMusicDisclosure, badgeHasAILabel, videoIdFromURL, selectNextVideo } = globalThis.SkipAITunes;
   let enabled = false;
   let blockAllAI = false;
   let navigationAt = Date.now();
@@ -36,11 +36,12 @@
 
   function check() {
     pending = false;
-    if (!enabled || blockAllAI || Date.now() - navigationAt < 1500) return;
-    const context = playbackContext(location.href);
-    if (!context) return;
+    if ((!enabled && !blockAllAI) || Date.now() - navigationAt < 1500) return;
+    if (location.pathname !== '/watch') return;
+    const videoId = videoIdFromURL(location.href);
+    if (!videoId) return;
     const watch = document.querySelector('ytd-watch-flexy');
-    if (!watch || watch.getAttribute('video-id') !== context.videoId) return;
+    if (!watch || watch.getAttribute('video-id') !== videoId) return;
     if (document.querySelector('#movie_player.ad-showing')) return;
     const video = document.querySelector('#movie_player video');
     if (!video || video.paused || video.ended || video.readyState < 2) return;
@@ -48,16 +49,14 @@
       .some(element => isMusicDisclosure(element.textContent));
     if (!musicDisclosure && !hasAIBadge()) return;
 
-    const next = document.querySelector('#movie_player .ytp-next-button');
-    if (!next || next.getAttribute('aria-disabled') === 'true') return;
-    const target = playbackContext(next.href || 'https://www.youtube.com/');
-    if (!target || target.listId !== context.listId || target.videoId === context.videoId) return;
-    const key = `${context.listId}:${context.videoId}`;
+    const next = selectNextVideo(document, location.href);
+    if (!next) return;
+    const key = location.href;
     if (lastSkip === key) return;
     lastSkip = key;
     console.info('[Skip AI Tunes] Skipping video with an AI badge or music disclosure.');
     next.click();
-    globalThis.SkipAITunes.reportBlocked(context.videoId);
+    globalThis.SkipAITunes.reportBlocked(videoId);
   }
 
   function schedule() {

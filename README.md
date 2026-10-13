@@ -1,9 +1,10 @@
 # Skip AI Tunes
 
 A Manifest V3 Chrome extension that advances to the next video in an actively
-playing YouTube mix or playlist when the current video displays YouTube’s **AI**
+playing YouTube video when the current video displays YouTube’s **AI**
 badge beneath the title or a disclosure explicitly identifies AI-generated music.
-An ordinary video outside a playlist is left alone.
+In a playlist it chooses the next item; outside a playlist it chooses YouTube's
+next video or a suggestion so playback can continue.
 
 ## Install
 
@@ -15,12 +16,18 @@ Use the extension popup to turn skipping on or off. No build or dependency
 installation is required. Settings remain on your device; the extension sends
 no data and requires only storage permission and access to www.youtube.com.
 
-Version 1.1 adds **Block all AI-tagged videos**, a separate setting that is off
+**Block all AI-tagged videos** is a separate setting that is off
 by default. When enabled, videos with an AI badge are hidden from Home, search,
-and recommendations. Tagged watch pages are paused and replaced with a blocking
-notice, including videos outside playlists. Blocking takes priority over playlist
-skipping. Turn blocking off to restore hidden items and player controls; resume
-playback manually. The setting persists and updates open tabs.
+and recommendations. Version 1.3 automatically advances past tagged watch videos
+instead of pausing or hiding the player. Either the skip setting or the block-all
+setting enables advancing; turn both off to leave playback alone. Turn blocking
+off to restore hidden cards. Settings persist and update open tabs.
+
+Navigation prefers the next playlist item, then the player's Next button, then
+an available untagged suggested video. Suggestions already marked AI are ignored.
+If no usable target is available, the extension keeps checking without pausing
+the player. Consecutive tagged playlist items are skipped as their badges load.
+Playback that the user has paused is left alone.
 
 Filtering can only detect AI badges YouTube exposes in a card's markup. If Home
 or search omits a video's badge, it cannot be identified before opening the video.
@@ -57,5 +64,8 @@ For a live check, load unpacked in Chrome and play a playlist containing a video
 with the AI badge or an explicit music disclosure. Confirm it advances once,
 leaves untagged videos alone, and stops skipping when disabled. Also check
 paused playback, ordinary watch pages, and navigation between playlist videos.
+Test with block-all enabled and skipping disabled, and with both enabled. For a
+standalone tagged video, confirm it advances to a suggested video. At playlist
+end, check the fallback when YouTube supplies no next playlist item.
 Keep a real disclosure example when updating selectors; do not broaden detection
 to arbitrary page text.

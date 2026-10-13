@@ -1,8 +1,1 @@
-[data-skip-ai-hidden], [data-skip-ai-blocked] { display: none !important; }
-.skip-ai-block-notice {
-  padding: 24px;
-  background: #202124;
-  color: #fff;
-  font: 16px/1.5 system-ui, sans-serif;
-  border-radius: 12px;
-}
+[data-skip-ai-hidden] { display: none !important; }
